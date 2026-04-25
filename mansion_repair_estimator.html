@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>大規模修繕費用シミュレーター</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f4f0;
+    --surface: #ffffff;
+    --surface2: #f1f0ec;
+    --border: rgba(0,0,0,0.12);
+    --border-em: rgba(0,0,0,0.25);
+    --text: #1a1a1a;
+    --text2: #555;
+    --text3: #999;
+    --blue: #185FA5;
+    --blue-light: #E6F1FB;
+    --blue-mid: #378ADD;
+    --red: #A32D2D;
+    --green-bg: #EAF3DE;
+    --green-text: #27500A;
+    --green-border: #C0DD97;
+    --warn-bg: #FAEEDA;
+    --warn-text: #633806;
+    --warn-border: #FAC775;
+    --radius: 8px;
+    --radius-lg: 12px;
+  }
+
+  body {
+    font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', 'Yu Gothic', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 2rem 1rem;
+  }
+
+  .container {
+    max-width: 860px;
+    margin: 0 auto;
+  }
+
+  header {
+    margin-bottom: 1.75rem;
+  }
+
+  header h1 {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  header p {
+    font-size: 13px;
+    color: var(--text2);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  @media (max-width: 640px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+
+  .card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+  }
+
+  .card-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text2);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 1.25rem;
+  }
+
+  .field { margin-bottom: 1.1rem; }
+
+  .field label {
+    display: block;
+    font-size: 13px;
+    color: var(--text2);
+    margin-bottom: 6px;
+  }
+
+  .input-wrap { position: relative; }
+
+  .input-wrap input {
+    width: 100%;
+    padding: 9px 36px 9px 12px;
+    border: 0.5px solid var(--border-em);
+    border-radius: var(--radius);
+    font-size: 15px;
+    background: var(--surface2);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+    font-family: inherit;
+  }
+
+  .input-wrap input:focus { border-color: var(--blue); background: var(--surface); }
+  .input-wrap input::placeholder { color: var(--text3); }
+
+  .input-unit {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 12px;
+    color: var(--text3);
+    pointer-events: none;
+  }
+
+  .tag-group { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  .tag {
+    padding: 6px 13px;
+    border: 0.5px solid var(--border-em);
+    border-radius: 20px;
+    font-size: 12px;
+    cursor: pointer;
+    color: var(--text2);
+    background: var(--surface2);
+    transition: all 0.15s;
+    user-select: none;
+    font-family: inherit;
+  }
+
+  .tag:hover { background: var(--bg); }
+  .tag.active { border-color: var(--blue); background: var(--blue-light); color: var(--blue); font-weight: 500; }
+
+  /* Result panel */
+  .result-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 260px;
+    color: var(--text3);
+    font-size: 13px;
+    gap: 10px;
+  }
+
+  .result-empty .icon { font-size: 36px; }
+
+  .metric-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  .metric {
+    background: var(--surface2);
+    border-radius: var(--radius);
+    padding: 12px;
+    text-align: center;
+  }
+
+  .metric-label { font-size: 11px; color: var(--text2); margin-bottom: 5px; }
+  .metric-val { font-size: 16px; font-weight: 600; color: var(--text); }
+  .metric-val.low { color: var(--blue); font-size: 14px; }
+  .metric-val.high { color: var(--red); font-size: 14px; }
+
+  .per-unit {
+    font-size: 12px;
+    color: var(--text2);
+    margin-bottom: 14px;
+    padding: 8px 12px;
+    background: var(--blue-light);
+    border-radius: var(--radius);
+    border-left: 3px solid var(--blue-mid);
+  }
+
+  .per-unit span { color: var(--blue); font-weight: 600; }
+
+  .divider { border: none; border-top: 0.5px solid var(--border); margin: 1rem 0; }
+
+  .breakdown-title { font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 10px; }
+
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .row-label { font-size: 12px; color: var(--text2); width: 90px; flex-shrink: 0; }
+
+  .row-bar-wrap {
+    flex: 1;
+    height: 5px;
+    background: var(--surface2);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .row-bar { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
+
+  .row-val { font-size: 12px; color: var(--text); width: 65px; text-align: right; flex-shrink: 0; }
+
+  .alert {
+    margin-top: 14px;
+    padding: 10px 12px;
+    border-radius: var(--radius);
+    font-size: 12px;
+    line-height: 1.7;
+  }
+
+  .alert-warn { background: var(--warn-bg); color: var(--warn-text); border: 0.5px solid var(--warn-border); }
+  .alert-ok { background: var(--green-bg); color: var(--green-text); border: 0.5px solid var(--green-border); }
+
+  footer {
+    margin-top: 1.5rem;
+    text-align: center;
+    font-size: 11px;
+    color: var(--text3);
+    line-height: 1.8;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>🏢 大規模修繕費用シミュレーター</h1>
+    <p>マンションの基本情報を入力すると、修繕工事の費用相場を試算します</p>
+  </header>
+
+  <div class="grid">
+    <!-- 入力フォーム -->
+    <div class="card">
+      <p class="card-title">基本情報を入力</p>
+
+      <div class="field">
+        <label>総戸数</label>
+        <div class="input-wrap">
+          <input type="number" id="units" min="2" max="1000" placeholder="例：50">
+          <span class="input-unit">戸</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>築年数</label>
+        <div class="input-wrap">
+          <input type="number" id="age" min="1" max="80" placeholder="例：15">
+          <span class="input-unit">年</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>修繕回数（今回は何回目か）</label>
+        <div class="tag-group" id="repairNum">
+          <div class="tag active" data-val="1">1回目</div>
+          <div class="tag" data-val="2">2回目</div>
+          <div class="tag" data-val="3">3回目以降</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>構造</label>
+        <div class="tag-group" id="structure">
+          <div class="tag active" data-val="RC">RC造</div>
+          <div class="tag" data-val="SRC">SRC造</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>立地・環境</label>
+        <div class="tag-group" id="location">
+          <div class="tag active" data-val="normal">一般地</div>
+          <div class="tag" data-val="coastal">海沿い</div>
+          <div class="tag" data-val="cold">寒冷地</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>仕様グレード</label>
+        <div class="tag-group" id="grade">
+          <div class="tag active" data-val="standard">標準</div>
+          <div class="tag" data-val="high">ハイグレード</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 結果パネル -->
+    <div class="card" id="result-panel">
+      <p class="card-title">試算結果</p>
+      <div class="result-empty">
+        <span class="icon">🏗️</span>
+        <span>左に情報を入力してください</span>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    ※ 本ツールの試算値は一般的な相場データに基づく目安です。実際の費用は建物の状態・仕様・地域等により大きく異なります。<br>
+    正確な見積もりは複数の施工会社または設計監理者にご相談ください。
+  </footer>
+</div>
+
+<script>
+const STATE = {
+  units: '',
+  age: '',
+  repairNum: '1',
+  structure: 'RC',
+  location: 'normal',
+  grade: 'standard',
+};
+
+const BASE = {
+  1: { low: 700000, mid: 875000, high: 1000000 },
+  2: { low: 850000, mid: 1025000, high: 1200000 },
+  3: { low: 1000000, mid: 1200000, high: 1400000 },
+};
+
+const BREAKDOWN = [
+  { label: '仮設足場', pct: 0.22, color: '#378ADD' },
+  { label: '外壁塗装', pct: 0.20, color: '#1D9E75' },
+  { label: 'シーリング', pct: 0.10, color: '#D85A30' },
+  { label: '屋上防水', pct: 0.13, color: '#BA7517' },
+  { label: '鉄部塗装', pct: 0.08, color: '#9E3A7A' },
+  { label: 'タイル補修', pct: 0.10, color: '#D4537E' },
+  { label: '共用設備他', pct: 0.10, color: '#888780' },
+  { label: '諸経費・管理費', pct: 0.07, color: '#5F5E5A' },
+];
+
+function fmt(n) {
+  if (n >= 100000000) return (n / 100000000).toFixed(2) + '億円';
+  return Math.round(n / 10000) + '万円';
+}
+
+function fmtPer(n) {
+  return Math.round(n / 10000) + '万円';
+}
+
+function calcResult() {
+  const units = Number(STATE.units);
+  const age = Number(STATE.age);
+  if (!units || units < 2) return null;
+
+  const b = BASE[STATE.repairNum];
+  let low = b.low, mid = b.mid, high = b.high;
+
+  if (STATE.structure === 'SRC') { low *= 1.05; mid *= 1.05; high *= 1.05; }
+  if (STATE.location === 'coastal') { low *= 1.12; mid *= 1.12; high *= 1.12; }
+  if (STATE.location === 'cold') { low *= 1.10; mid *= 1.10; high *= 1.10; }
+  if (STATE.grade === 'high') { low *= 1.20; mid *= 1.20; high *= 1.20; }
+  if (age >= 25 && STATE.repairNum === '1') { low *= 1.08; mid *= 1.08; high *= 1.08; }
+
+  return {
+    perUnit: { low, mid, high },
+    total: {
+      low: Math.round(low * units / 10000) * 10000,
+      mid: Math.round(mid * units / 10000) * 10000,
+      high: Math.round(high * units / 10000) * 10000,
+    },
+    age, units,
+  };
+}
+
+function render() {
+  const r = calcResult();
+  const panel = document.getElementById('result-panel');
+
+  if (!r) {
+    panel.innerHTML = `
+      <p class="card-title">試算結果</p>
+      <div class="result-empty">
+        <span class="icon">🏗️</span>
+        <span>左に情報を入力してください</span>
+      </div>`;
+    return;
+  }
+
+  const maxPct = BREAKDOWN[0].pct;
+
+  let breakdownHTML = BREAKDOWN.map(b => {
+    const val = Math.round(r.total.mid * b.pct / 10000) * 10000;
+    const barW = Math.round(b.pct / maxPct * 100);
+    return `
+      <div class="row">
+        <span class="row-label">${b.label}</span>
+        <div class="row-bar-wrap">
+          <div class="row-bar" style="width:${barW}%;background:${b.color}"></div>
+        </div>
+        <span class="row-val">${fmt(val)}</span>
+      </div>`;
+  }).join('');
+
+  let alertHTML = '';
+  if (r.age >= 25 && STATE.repairNum === '1') {
+    alertHTML = `<div class="alert alert-warn">⚠ 築${r.age}年での1回目修繕は、劣化進行が標準より大きい可能性があります。事前に専門家による詳細診断を推奨します。</div>`;
+  } else if (STATE.location === 'coastal') {
+    alertHTML = `<div class="alert alert-warn">⚠ 海沿い立地は塩害による劣化が進みやすく、高耐久仕様の材料選定が重要です。</div>`;
+  } else {
+    alertHTML = `<div class="alert alert-ok">✓ 相見積もりは最低3社から取得し、「一式」表記の多い見積もりは内訳の開示を求めることを推奨します。</div>`;
+  }
+
+  panel.innerHTML = `
+    <p class="card-title">試算結果</p>
+    <div class="metric-grid">
+      <div class="metric">
+        <div class="metric-label">下限</div>
+        <div class="metric-val low">${fmt(r.total.low)}</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">中央値</div>
+        <div class="metric-val">${fmt(r.total.mid)}</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">上限</div>
+        <div class="metric-val high">${fmt(r.total.high)}</div>
+      </div>
+    </div>
+    <div class="per-unit">1戸あたり単価の目安：<span>${fmtPer(r.perUnit.low)} 〜 ${fmtPer(r.perUnit.high)}</span>（中央値 ${fmtPer(r.perUnit.mid)}）</div>
+    <hr class="divider">
+    <p class="breakdown-title">工種別内訳（中央値ベースの目安）</p>
+    ${breakdownHTML}
+    ${alertHTML}`;
+}
+
+// Tag group clicks
+['repairNum', 'structure', 'location', 'grade'].forEach(id => {
+  document.getElementById(id).addEventListener('click', e => {
+    const tag = e.target.closest('.tag');
+    if (!tag) return;
+    document.querySelectorAll(`#${id} .tag`).forEach(t => t.classList.remove('active'));
+    tag.classList.add('active');
+    STATE[id] = tag.dataset.val;
+    render();
+  });
+});
+
+// Number inputs
+['units', 'age'].forEach(id => {
+  document.getElementById(id).addEventListener('input', e => {
+    STATE[id] = e.target.value;
+    render();
+  });
+});
+
+render();
+</script>
+</body>
+</html>
