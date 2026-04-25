@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>大規模修繕費用シミュレーター</title>
+<title>大規模修繕費用シミュレーター 2026年版</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -20,12 +20,17 @@
     --blue-light: #E6F1FB;
     --blue-mid: #378ADD;
     --red: #A32D2D;
+    --red-light: #FCEBEB;
+    --red-border: #F09595;
     --green-bg: #EAF3DE;
     --green-text: #27500A;
     --green-border: #C0DD97;
     --warn-bg: #FAEEDA;
     --warn-text: #633806;
     --warn-border: #FAC775;
+    --purple-bg: #EEEDFE;
+    --purple-text: #26215C;
+    --purple-border: #AFA9EC;
     --radius: 8px;
     --radius-lg: 12px;
   }
@@ -38,36 +43,25 @@
     padding: 2rem 1rem;
   }
 
-  .container {
-    max-width: 860px;
-    margin: 0 auto;
-  }
+  .container { max-width: 940px; margin: 0 auto; }
 
-  header {
-    margin-bottom: 1.75rem;
-  }
+  header { margin-bottom: 1.25rem; }
+  header h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+  header p { font-size: 13px; color: var(--text2); }
 
-  header h1 {
-    font-size: 22px;
-    font-weight: 600;
-    color: var(--text);
-    margin-bottom: 4px;
+  .notice {
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    font-size: 12px;
+    line-height: 1.8;
+    margin-bottom: 1.25rem;
   }
+  .notice-warn { background: var(--warn-bg); border: 0.5px solid var(--warn-border); color: var(--warn-text); }
+  .notice-danger { background: var(--red-light); border: 0.5px solid var(--red-border); color: var(--red); }
+  .notice strong { font-weight: 600; }
 
-  header p {
-    font-size: 13px;
-    color: var(--text2);
-  }
-
-  .grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-  }
-
-  @media (max-width: 640px) {
-    .grid { grid-template-columns: 1fr; }
-  }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 680px) { .grid { grid-template-columns: 1fr; } }
 
   .card {
     background: var(--surface);
@@ -76,157 +70,138 @@
     padding: 1.5rem;
   }
 
-  .card-title {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text2);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    margin-bottom: 1.25rem;
-  }
+  .card-title { font-size: 12px; font-weight: 600; color: var(--text2); letter-spacing: 0.06em; margin-bottom: 1.25rem; }
 
-  .field { margin-bottom: 1.1rem; }
-
-  .field label {
-    display: block;
-    font-size: 13px;
-    color: var(--text2);
-    margin-bottom: 6px;
+  .section-label {
+    font-size: 11px; font-weight: 600; color: var(--text3);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    margin: 1rem 0 0.6rem;
+    padding-top: 0.8rem;
+    border-top: 0.5px solid var(--border);
   }
+  .section-label:first-child { margin-top: 0; border-top: none; padding-top: 0; }
+
+  .field { margin-bottom: 1rem; }
+  .field label { display: block; font-size: 13px; color: var(--text2); margin-bottom: 6px; }
 
   .input-wrap { position: relative; }
-
   .input-wrap input {
-    width: 100%;
-    padding: 9px 36px 9px 12px;
-    border: 0.5px solid var(--border-em);
-    border-radius: var(--radius);
-    font-size: 15px;
-    background: var(--surface2);
-    color: var(--text);
-    outline: none;
-    transition: border-color 0.15s;
-    font-family: inherit;
+    width: 100%; padding: 9px 36px 9px 12px;
+    border: 0.5px solid var(--border-em); border-radius: var(--radius);
+    font-size: 15px; background: var(--surface2); color: var(--text);
+    outline: none; transition: border-color 0.15s; font-family: inherit;
   }
-
   .input-wrap input:focus { border-color: var(--blue); background: var(--surface); }
   .input-wrap input::placeholder { color: var(--text3); }
-
   .input-unit {
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 12px;
-    color: var(--text3);
-    pointer-events: none;
+    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    font-size: 12px; color: var(--text3); pointer-events: none;
   }
 
   .tag-group { display: flex; gap: 6px; flex-wrap: wrap; }
-
   .tag {
-    padding: 6px 13px;
-    border: 0.5px solid var(--border-em);
-    border-radius: 20px;
-    font-size: 12px;
-    cursor: pointer;
-    color: var(--text2);
-    background: var(--surface2);
-    transition: all 0.15s;
-    user-select: none;
-    font-family: inherit;
+    padding: 6px 12px; border: 0.5px solid var(--border-em); border-radius: 20px;
+    font-size: 12px; cursor: pointer; color: var(--text2); background: var(--surface2);
+    transition: all 0.15s; user-select: none; font-family: inherit;
   }
-
   .tag:hover { background: var(--bg); }
   .tag.active { border-color: var(--blue); background: var(--blue-light); color: var(--blue); font-weight: 500; }
+  .tag.active-red { border-color: var(--red); background: var(--red-light); color: var(--red); font-weight: 500; }
+  .tag.active-warn { border-color: #BA7517; background: var(--warn-bg); color: var(--warn-text); font-weight: 500; }
+  .tag.active-green { border-color: #3B6D11; background: var(--green-bg); color: var(--green-text); font-weight: 500; }
 
-  /* Result panel */
-  .result-empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 260px;
-    color: var(--text3);
-    font-size: 13px;
-    gap: 10px;
+  .slider-wrap { padding: 4px 0; }
+  .slider-wrap input[type=range] { width: 100%; accent-color: var(--blue); cursor: pointer; }
+  .slider-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--text3); margin-top: 4px; }
+  .slider-val { display: inline-block; font-size: 14px; font-weight: 600; color: var(--blue); margin-left: 6px; }
+
+  /* geo risk cards */
+  .geo-card {
+    border: 0.5px solid var(--border-em); border-radius: var(--radius);
+    padding: 10px 12px; cursor: pointer; transition: all 0.15s;
+    margin-bottom: 7px; position: relative;
   }
+  .geo-card:hover { background: var(--surface2); }
+  .geo-card.active { border-color: var(--blue); background: var(--blue-light); }
+  .geo-card.active-warn { border-color: #BA7517; background: var(--warn-bg); }
+  .geo-card.active-danger { border-color: var(--red); background: var(--red-light); }
+  .geo-card.active-extreme { border-color: #534AB7; background: var(--purple-bg); }
+  .geo-card-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+  .geo-card-desc { font-size: 11px; color: var(--text2); line-height: 1.5; }
+  .geo-badge {
+    position: absolute; top: 10px; right: 10px;
+    font-size: 10px; font-weight: 600; padding: 2px 7px;
+    border-radius: 10px;
+  }
+  .badge-0 { background: var(--green-bg); color: var(--green-text); }
+  .badge-1 { background: var(--warn-bg); color: var(--warn-text); }
+  .badge-2 { background: var(--red-light); color: var(--red); }
+  .badge-3 { background: var(--purple-bg); color: var(--purple-text); }
 
+  /* Results */
+  .result-empty {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; min-height: 340px; color: var(--text3);
+    font-size: 13px; gap: 10px;
+  }
   .result-empty .icon { font-size: 36px; }
 
-  .metric-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin-bottom: 18px;
+  .scenario-banner {
+    border-radius: var(--radius); padding: 10px 14px;
+    font-size: 12px; line-height: 1.7; margin-bottom: 14px; font-weight: 500;
   }
+  .sb-normal { background: var(--green-bg); color: var(--green-text); border: 0.5px solid var(--green-border); }
+  .sb-warn   { background: var(--warn-bg); color: var(--warn-text); border: 0.5px solid var(--warn-border); }
+  .sb-danger { background: var(--red-light); color: var(--red); border: 0.5px solid var(--red-border); }
+  .sb-extreme{ background: var(--purple-bg); color: var(--purple-text); border: 0.5px solid var(--purple-border); }
 
-  .metric {
-    background: var(--surface2);
-    border-radius: var(--radius);
-    padding: 12px;
-    text-align: center;
+  .price-block {
+    background: var(--surface2); border-radius: var(--radius-lg);
+    padding: 14px 16px; margin-bottom: 12px;
   }
-
-  .metric-label { font-size: 11px; color: var(--text2); margin-bottom: 5px; }
-  .metric-val { font-size: 16px; font-weight: 600; color: var(--text); }
-  .metric-val.low { color: var(--blue); font-size: 14px; }
-  .metric-val.high { color: var(--red); font-size: 14px; }
+  .price-block-label { font-size: 11px; color: var(--text2); margin-bottom: 8px; font-weight: 600; }
+  .price-row { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 6px; }
+  .price-row:last-child { margin-bottom: 0; }
+  .price-row-label { font-size: 12px; color: var(--text2); }
+  .price-row-val { font-size: 16px; font-weight: 600; color: var(--text); }
+  .price-row-val.accent { color: var(--blue); font-size: 20px; }
+  .price-row-val.lo { color: #185FA5; font-size: 14px; }
+  .price-row-val.hi { color: var(--red); font-size: 14px; }
 
   .per-unit {
-    font-size: 12px;
-    color: var(--text2);
-    margin-bottom: 14px;
-    padding: 8px 12px;
-    background: var(--blue-light);
-    border-radius: var(--radius);
-    border-left: 3px solid var(--blue-mid);
+    font-size: 12px; color: var(--text2); margin-bottom: 12px;
+    padding: 8px 12px; background: var(--blue-light); border-radius: var(--radius);
+    border-left: 3px solid var(--blue-mid); line-height: 1.7;
   }
-
   .per-unit span { color: var(--blue); font-weight: 600; }
+
+  .impact-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;
+  }
+  .impact-item {
+    background: var(--surface2); border-radius: var(--radius); padding: 10px 12px;
+  }
+  .impact-label { font-size: 11px; color: var(--text2); margin-bottom: 4px; }
+  .impact-val { font-size: 15px; font-weight: 600; }
 
   .divider { border: none; border-top: 0.5px solid var(--border); margin: 1rem 0; }
 
   .breakdown-title { font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 10px; }
+  .brow { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .brow-label { font-size: 12px; color: var(--text2); width: 90px; flex-shrink: 0; }
+  .brow-bar-wrap { flex: 1; height: 5px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .brow-bar { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
+  .brow-val { font-size: 12px; color: var(--text); width: 65px; text-align: right; flex-shrink: 0; }
 
-  .row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 8px;
-  }
-
-  .row-label { font-size: 12px; color: var(--text2); width: 90px; flex-shrink: 0; }
-
-  .row-bar-wrap {
-    flex: 1;
-    height: 5px;
-    background: var(--surface2);
-    border-radius: 3px;
-    overflow: hidden;
-  }
-
-  .row-bar { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
-
-  .row-val { font-size: 12px; color: var(--text); width: 65px; text-align: right; flex-shrink: 0; }
-
-  .alert {
-    margin-top: 14px;
-    padding: 10px 12px;
-    border-radius: var(--radius);
-    font-size: 12px;
-    line-height: 1.7;
-  }
-
+  .alert { margin-top: 10px; padding: 10px 12px; border-radius: var(--radius); font-size: 12px; line-height: 1.7; }
   .alert-warn { background: var(--warn-bg); color: var(--warn-text); border: 0.5px solid var(--warn-border); }
-  .alert-ok { background: var(--green-bg); color: var(--green-text); border: 0.5px solid var(--green-border); }
+  .alert-ok   { background: var(--green-bg); color: var(--green-text); border: 0.5px solid var(--green-border); }
+
+  .data-source { font-size: 11px; color: var(--text3); margin-top: 8px; line-height: 1.7; }
 
   footer {
-    margin-top: 1.5rem;
-    text-align: center;
-    font-size: 11px;
-    color: var(--text3);
-    line-height: 1.8;
+    margin-top: 1.5rem; text-align: center;
+    font-size: 11px; color: var(--text3); line-height: 1.8;
   }
 </style>
 </head>
@@ -234,13 +209,21 @@
 <div class="container">
   <header>
     <h1>🏢 大規模修繕費用シミュレーター</h1>
-    <p>マンションの基本情報を入力すると、修繕工事の費用相場を試算します</p>
+    <p>マンションの基本情報・物価シナリオ・地政学リスクを入力すると費用相場を試算します</p>
   </header>
 
+  <div class="notice notice-danger" id="geo-notice">
+    <strong>⚠ 地政学リスク 現在進行中（2026年4月）：</strong>
+    米国・イスラエルによるイラン攻撃を受けホルムズ海峡が事実上封鎖中。原油価格は1バレル$112まで急騰。
+    日本は原油輸入の約94%を中東に依存しており、塗料・防水材・シーリング材など石油由来の建設資材への影響が顕在化しています。
+  </div>
+
   <div class="grid">
-    <!-- 入力フォーム -->
+    <!-- 入力パネル -->
     <div class="card">
       <p class="card-title">基本情報を入力</p>
+
+      <p class="section-label" style="border-top:none;margin-top:0;padding-top:0">建物情報</p>
 
       <div class="field">
         <label>総戸数</label>
@@ -259,7 +242,7 @@
       </div>
 
       <div class="field">
-        <label>修繕回数（今回は何回目か）</label>
+        <label>修繕回数</label>
         <div class="tag-group" id="repairNum">
           <div class="tag active" data-val="1">1回目</div>
           <div class="tag" data-val="2">2回目</div>
@@ -291,6 +274,51 @@
           <div class="tag" data-val="high">ハイグレード</div>
         </div>
       </div>
+
+      <p class="section-label">物価上昇シナリオ</p>
+
+      <div class="field">
+        <label>工事予定年 <span class="slider-val" id="yearVal">2026年</span></label>
+        <div class="slider-wrap">
+          <input type="range" id="targetYear" min="2026" max="2036" value="2026" step="1">
+          <div class="slider-labels"><span>2026年</span><span>2036年</span></div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>年間物価上昇率（通常分）</label>
+        <div class="tag-group" id="inflationRate">
+          <div class="tag active" data-val="3">楽観 +3%/年</div>
+          <div class="tag" data-val="5">標準 +5%/年</div>
+          <div class="tag" data-val="7">保守 +7%/年</div>
+        </div>
+      </div>
+
+      <p class="section-label">🌐 地政学リスクシナリオ</p>
+
+      <div class="geo-card active" data-geo="0" id="geo0" onclick="selectGeo(0)">
+        <span class="geo-badge badge-0">コスト影響 +0%</span>
+        <div class="geo-card-title">平常時</div>
+        <div class="geo-card-desc">中東情勢安定・ホルムズ海峡通航正常</div>
+      </div>
+
+      <div class="geo-card" data-geo="1" id="geo1" onclick="selectGeo(1)">
+        <span class="geo-badge badge-1">コスト影響 +8〜12%</span>
+        <div class="geo-card-title">局地的緊張（短期）</div>
+        <div class="geo-card-desc">原油価格$87前後・部分的な輸送支障・1〜3ヶ月で収束想定（NRI ベースシナリオ）</div>
+      </div>
+
+      <div class="geo-card" data-geo="2" id="geo2" onclick="selectGeo(2)">
+        <span class="geo-badge badge-2">コスト影響 +20〜25%</span>
+        <div class="geo-card-title">ホルムズ海峡 長期封鎖</div>
+        <div class="geo-card-desc">現在進行中シナリオ。原油$112超・塗料・防水材・シーリング材が深刻な供給不足・価格高騰</div>
+      </div>
+
+      <div class="geo-card" data-geo="3" id="geo3" onclick="selectGeo(3)">
+        <span class="geo-badge badge-3">コスト影響 +35〜45%</span>
+        <div class="geo-card-title">完全封鎖・長期戦争状態</div>
+        <div class="geo-card-desc">原油$140超（2008年リーマン前水準）・サプライチェーン寸断・工事延期リスク大（NRI 悲観シナリオ）</div>
+      </div>
     </div>
 
     <!-- 結果パネル -->
@@ -304,70 +332,105 @@
   </div>
 
   <footer>
-    ※ 本ツールの試算値は一般的な相場データに基づく目安です。実際の費用は建物の状態・仕様・地域等により大きく異なります。<br>
-    正確な見積もりは複数の施工会社または設計監理者にご相談ください。
+    ※ 本ツールは2025〜2026年の相場・地政学データに基づく目安です。実際の費用は建物状態・地域・時期等により大きく異なります。<br>
+    正確な見積もりは複数の施工会社・設計監理者にご相談ください。<br>
+    データ出典：国土交通省実態調査、建設物価調査会（2025年8月）、野村総合研究所シナリオ分析（2026年3月）、三菱UFJ銀行・ジェトロ中東情勢レポート（2026年4月）
   </footer>
 </div>
 
 <script>
 const STATE = {
-  units: '',
-  age: '',
-  repairNum: '1',
-  structure: 'RC',
-  location: 'normal',
-  grade: 'standard',
+  units: '', age: '',
+  repairNum: '1', structure: 'RC', location: 'normal', grade: 'standard',
+  targetYear: 2026, inflationRate: '3', geoRisk: 0,
 };
 
+// 2026年最新相場ベース（1戸あたり、物価高騰済み）
 const BASE = {
-  1: { low: 700000, mid: 875000, high: 1000000 },
-  2: { low: 850000, mid: 1025000, high: 1200000 },
-  3: { low: 1000000, mid: 1200000, high: 1400000 },
+  1: { low: 950000,  mid: 1150000, high: 1350000 },
+  2: { low: 1150000, mid: 1350000, high: 1600000 },
+  3: { low: 1250000, mid: 1500000, high: 1800000 },
 };
+
+// 地政学リスク乗数（low/mid/high別）
+const GEO_FACTORS = [
+  { label: '平常時',             factor: 1.00, oilPrice: 67,  class: 'sb-normal',  icon: '✅' },
+  { label: '局地的緊張（短期）', factor: 1.10, oilPrice: 87,  class: 'sb-warn',    icon: '⚠️' },
+  { label: 'ホルムズ長期封鎖',   factor: 1.22, oilPrice: 112, class: 'sb-danger',  icon: '🚨' },
+  { label: '完全封鎖・長期戦争', factor: 1.40, oilPrice: 140, class: 'sb-extreme', icon: '🔴' },
+];
 
 const BREAKDOWN = [
-  { label: '仮設足場', pct: 0.22, color: '#378ADD' },
-  { label: '外壁塗装', pct: 0.20, color: '#1D9E75' },
-  { label: 'シーリング', pct: 0.10, color: '#D85A30' },
-  { label: '屋上防水', pct: 0.13, color: '#BA7517' },
-  { label: '鉄部塗装', pct: 0.08, color: '#9E3A7A' },
-  { label: 'タイル補修', pct: 0.10, color: '#D4537E' },
-  { label: '共用設備他', pct: 0.10, color: '#888780' },
-  { label: '諸経費・管理費', pct: 0.07, color: '#5F5E5A' },
+  { label: '仮設足場',      pct: 0.22, color: '#378ADD', oilSens: 0.5 },
+  { label: '外壁塗装',      pct: 0.20, color: '#1D9E75', oilSens: 1.0 },
+  { label: 'シーリング',    pct: 0.10, color: '#D85A30', oilSens: 1.0 },
+  { label: '屋上防水',      pct: 0.13, color: '#BA7517', oilSens: 0.9 },
+  { label: '鉄部塗装',      pct: 0.08, color: '#9E3A7A', oilSens: 0.8 },
+  { label: 'タイル補修',    pct: 0.10, color: '#D4537E', oilSens: 0.3 },
+  { label: '共用設備他',    pct: 0.10, color: '#888780', oilSens: 0.4 },
+  { label: '諸経費・管理費',pct: 0.07, color: '#5F5E5A', oilSens: 0.2 },
 ];
 
 function fmt(n) {
   if (n >= 100000000) return (n / 100000000).toFixed(2) + '億円';
   return Math.round(n / 10000) + '万円';
 }
-
-function fmtPer(n) {
-  return Math.round(n / 10000) + '万円';
-}
+function fmtPer(n) { return Math.round(n / 10000) + '万円'; }
 
 function calcResult() {
   const units = Number(STATE.units);
-  const age = Number(STATE.age);
+  const age   = Number(STATE.age);
   if (!units || units < 2) return null;
 
   const b = BASE[STATE.repairNum];
   let low = b.low, mid = b.mid, high = b.high;
 
-  if (STATE.structure === 'SRC') { low *= 1.05; mid *= 1.05; high *= 1.05; }
+  if (STATE.structure === 'SRC')    { low *= 1.05; mid *= 1.05; high *= 1.05; }
   if (STATE.location === 'coastal') { low *= 1.12; mid *= 1.12; high *= 1.12; }
-  if (STATE.location === 'cold') { low *= 1.10; mid *= 1.10; high *= 1.10; }
-  if (STATE.grade === 'high') { low *= 1.20; mid *= 1.20; high *= 1.20; }
+  if (STATE.location === 'cold')    { low *= 1.10; mid *= 1.10; high *= 1.10; }
+  if (STATE.grade === 'high')       { low *= 1.20; mid *= 1.20; high *= 1.20; }
   if (age >= 25 && STATE.repairNum === '1') { low *= 1.08; mid *= 1.08; high *= 1.08; }
+
+  // 地政学リスク
+  const geo = GEO_FACTORS[STATE.geoRisk];
+  low  *= geo.factor;
+  mid  *= geo.factor;
+  high *= geo.factor;
+
+  // 将来の通常物価上昇
+  const years = STATE.targetYear - 2026;
+  const rate  = Number(STATE.inflationRate) / 100;
+  const inflFactor = Math.pow(1 + rate, years);
+  low  *= inflFactor;
+  mid  *= inflFactor;
+  high *= inflFactor;
 
   return {
     perUnit: { low, mid, high },
     total: {
-      low: Math.round(low * units / 10000) * 10000,
-      mid: Math.round(mid * units / 10000) * 10000,
+      low:  Math.round(low  * units / 10000) * 10000,
+      mid:  Math.round(mid  * units / 10000) * 10000,
       high: Math.round(high * units / 10000) * 10000,
     },
+    base: {
+      low:  Math.round(b.low  * units / 10000) * 10000,
+      mid:  Math.round(b.mid  * units / 10000) * 10000,
+      high: Math.round(b.high * units / 10000) * 10000,
+    },
+    geo, years, inflFactor,
+    totalFactor: geo.factor * inflFactor,
     age, units,
   };
+}
+
+function selectGeo(n) {
+  STATE.geoRisk = n;
+  const classes = ['active','active-warn','active-danger','active-extreme'];
+  [0,1,2,3].forEach(i => {
+    const el = document.getElementById('geo'+i);
+    el.className = 'geo-card' + (i === n ? ' ' + classes[n] : '');
+  });
+  render();
 }
 
 function render() {
@@ -375,64 +438,79 @@ function render() {
   const panel = document.getElementById('result-panel');
 
   if (!r) {
-    panel.innerHTML = `
-      <p class="card-title">試算結果</p>
-      <div class="result-empty">
-        <span class="icon">🏗️</span>
-        <span>左に情報を入力してください</span>
-      </div>`;
+    panel.innerHTML = `<p class="card-title">試算結果</p>
+      <div class="result-empty"><span class="icon">🏗️</span><span>左に情報を入力してください</span></div>`;
     return;
   }
 
-  const maxPct = BREAKDOWN[0].pct;
+  const geo = r.geo;
+  const totalPctUp = Math.round((r.totalFactor - 1) * 100);
+  const geoPctUp   = Math.round((geo.factor - 1) * 100);
+  const inflPctUp  = Math.round((r.inflFactor - 1) * 100);
+  const yearLabel  = r.years > 0 ? `${STATE.targetYear}年時点` : '現在（2026年）';
 
+  let scenarioBanner = `<div class="scenario-banner ${geo.class}">
+    ${geo.icon} <strong>シナリオ：${geo.label}</strong>　原油価格 $${geo.oilPrice}/バレル想定
+    ${geoPctUp > 0 ? `　→ 地政学リスク上乗せ +${geoPctUp}%` : '　→ 地政学リスク影響なし'}
+    ${r.years > 0 ? `　通常物価上昇 +${inflPctUp}%（${r.years}年後）` : ''}
+    ${totalPctUp > 0 ? `<br>　合計コスト増加率：<strong>+${totalPctUp}%</strong>（基準比×${r.totalFactor.toFixed(2)}）` : ''}
+  </div>`;
+
+  const maxPct = BREAKDOWN[0].pct;
   let breakdownHTML = BREAKDOWN.map(b => {
     const val = Math.round(r.total.mid * b.pct / 10000) * 10000;
     const barW = Math.round(b.pct / maxPct * 100);
-    return `
-      <div class="row">
-        <span class="row-label">${b.label}</span>
-        <div class="row-bar-wrap">
-          <div class="row-bar" style="width:${barW}%;background:${b.color}"></div>
-        </div>
-        <span class="row-val">${fmt(val)}</span>
-      </div>`;
+    const sensitiveTag = STATE.geoRisk >= 2 && b.oilSens >= 0.8
+      ? ' <span style="font-size:10px;color:#A32D2D">▲原油高影響大</span>' : '';
+    return `<div class="brow">
+      <span class="brow-label">${b.label}${sensitiveTag}</span>
+      <div class="brow-bar-wrap"><div class="brow-bar" style="width:${barW}%;background:${b.color}"></div></div>
+      <span class="brow-val">${fmt(val)}</span>
+    </div>`;
   }).join('');
 
   let alertHTML = '';
   if (r.age >= 25 && STATE.repairNum === '1') {
-    alertHTML = `<div class="alert alert-warn">⚠ 築${r.age}年での1回目修繕は、劣化進行が標準より大きい可能性があります。事前に専門家による詳細診断を推奨します。</div>`;
-  } else if (STATE.location === 'coastal') {
-    alertHTML = `<div class="alert alert-warn">⚠ 海沿い立地は塩害による劣化が進みやすく、高耐久仕様の材料選定が重要です。</div>`;
+    alertHTML = `<div class="alert alert-warn">⚠ 築${r.age}年での1回目修繕は劣化進行が大きい可能性があります。専門家による詳細診断を推奨します。</div>`;
+  } else if (STATE.geoRisk >= 2) {
+    alertHTML = `<div class="alert alert-warn">⚠ 地政学リスクが高い状況では、工事の延期・資材調達の長期化も起こり得ます。施工会社と資材調達状況を事前に確認してください。</div>`;
   } else {
     alertHTML = `<div class="alert alert-ok">✓ 相見積もりは最低3社から取得し、「一式」表記の多い見積もりは内訳の開示を求めることを推奨します。</div>`;
   }
 
   panel.innerHTML = `
-    <p class="card-title">試算結果</p>
-    <div class="metric-grid">
-      <div class="metric">
-        <div class="metric-label">下限</div>
-        <div class="metric-val low">${fmt(r.total.low)}</div>
-      </div>
-      <div class="metric">
-        <div class="metric-label">中央値</div>
-        <div class="metric-val">${fmt(r.total.mid)}</div>
-      </div>
-      <div class="metric">
-        <div class="metric-label">上限</div>
-        <div class="metric-val high">${fmt(r.total.high)}</div>
-      </div>
+    <p class="card-title">試算結果 — ${yearLabel}</p>
+    ${scenarioBanner}
+    <div class="price-block">
+      <p class="price-block-label">総工事費（推定レンジ）</p>
+      <div class="price-row"><span class="price-row-label">下限</span><span class="price-row-val lo">${fmt(r.total.low)}</span></div>
+      <div class="price-row"><span class="price-row-label">中央値</span><span class="price-row-val accent">${fmt(r.total.mid)}</span></div>
+      <div class="price-row"><span class="price-row-label">上限</span><span class="price-row-val hi">${fmt(r.total.high)}</span></div>
     </div>
-    <div class="per-unit">1戸あたり単価の目安：<span>${fmtPer(r.perUnit.low)} 〜 ${fmtPer(r.perUnit.high)}</span>（中央値 ${fmtPer(r.perUnit.mid)}）</div>
+    <div class="per-unit">
+      1戸あたり単価：<span>${fmtPer(r.perUnit.low)} 〜 ${fmtPer(r.perUnit.high)}</span>（中央値 <span>${fmtPer(r.perUnit.mid)}</span>）
+    </div>
+    ${totalPctUp > 0 ? `
+    <div class="impact-grid">
+      <div class="impact-item">
+        <div class="impact-label">地政学リスク増加分</div>
+        <div class="impact-val" style="color:${STATE.geoRisk>=2?'#A32D2D':'#BA7517'}">${geoPctUp > 0 ? '+'+geoPctUp+'%' : '影響なし'}</div>
+      </div>
+      <div class="impact-item">
+        <div class="impact-label">物価上昇分（${r.years}年後）</div>
+        <div class="impact-val" style="color:#185FA5">${inflPctUp > 0 ? '+'+inflPctUp+'%' : '—'}</div>
+      </div>
+    </div>` : ''}
+    ${totalPctUp > 0 ? `<div class="per-unit" style="background:#f1f0ec;border-left-color:#888;font-size:11px">参考：地政学・物価上昇なしの基準額 ${fmt(r.base.low)} 〜 ${fmt(r.base.high)}（中央値 ${fmt(r.base.mid)}）</div>` : ''}
     <hr class="divider">
-    <p class="breakdown-title">工種別内訳（中央値ベースの目安）</p>
+    <p class="breakdown-title">工種別内訳（中央値ベース）</p>
     ${breakdownHTML}
-    ${alertHTML}`;
+    ${alertHTML}
+    <p class="data-source">出典：国交省実態調査 / 建設物価調査会(2025.8) / NRI・三菱UFJ・ジェトロ中東情勢分析(2026.3〜4)</p>`;
 }
 
-// Tag group clicks
-['repairNum', 'structure', 'location', 'grade'].forEach(id => {
+// Event listeners
+['repairNum','structure','location','grade','inflationRate'].forEach(id => {
   document.getElementById(id).addEventListener('click', e => {
     const tag = e.target.closest('.tag');
     if (!tag) return;
@@ -443,12 +521,17 @@ function render() {
   });
 });
 
-// Number inputs
-['units', 'age'].forEach(id => {
+['units','age'].forEach(id => {
   document.getElementById(id).addEventListener('input', e => {
     STATE[id] = e.target.value;
     render();
   });
+});
+
+document.getElementById('targetYear').addEventListener('input', e => {
+  STATE.targetYear = Number(e.target.value);
+  document.getElementById('yearVal').textContent = e.target.value + '年';
+  render();
 });
 
 render();
